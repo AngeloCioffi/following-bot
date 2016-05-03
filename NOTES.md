@@ -8,3 +8,11 @@ Explanation of how it works:
 http://mccormickml.com/2013/05/09/hog-person-detector-tutorial/
 
 Now only to fix it up with ROS.....
+
+
+the person detection program keeps track of a rectangle, use this rect to folow person
+to face person, point towards cener of rectangle
+if the rect gets smaller than a certain size, move forward
+if the rect gets too big, stop moving 
+start moving again as robot gets smaller
+no rect -- don't move
