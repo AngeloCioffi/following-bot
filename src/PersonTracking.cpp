@@ -90,10 +90,12 @@ public:
 	    r.height = cvRound(r.height*0.9);
 	    rectangle(img, r.tl(), r.br(), cv::Scalar(0,255,0), 2);
 	}
-        imshow("video capture", img);
+	
+        cv::imshow(OUT_WINDOW, img);
         if (waitKey(20) >= 0)
             break;
-    
+        
+        image_pub_.publish(cv_ptr->toImageMsg());
 
 }
 
