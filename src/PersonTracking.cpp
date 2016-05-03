@@ -81,6 +81,7 @@ public:
             if (j==found.size())
                 found_filtered.push_back(r);
         }
+        
         for (i=0; i<found_filtered.size(); i++)
         {
 	    Rect r = found_filtered[i];
@@ -90,6 +91,14 @@ public:
 	    r.height = cvRound(r.height*0.9);
 	    rectangle(img, r.tl(), r.br(), cv::Scalar(0,255,0), 2);
 	}
+	
+	//person location/movement code
+	double rectangleCenter;
+	
+	rectangleCenter = (found_filtered[0].x + found_filtered[0].width/2) + (found_filtered[found_filtered.size()].y + found_filtered[0].height/2);
+	double rectangleArea; //used to determine how far the person is from the robot
+	rectangleArea = found_filtered[0].width * found_filtered.height;
+	
 	
         cv::imshow(OUT_WINDOW, img);
         if (waitKey(20) >= 0)
