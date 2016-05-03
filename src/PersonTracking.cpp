@@ -1,7 +1,21 @@
 //Credits to Bryan Chung at http://www.magicandlove.com/blog/2011/08/26/people-detection-in-opencv-again/
 
+#include <ros/ros.h>
+#include <tf/tf.h>
+#include <move_base_msgs/MoveBaseAction.h>
+#include <actionlib/client/simple_action_client.h>
+#include <tf/transform_listener.h>
+#include <actionlib/server/simple_action_server.h>
+#include <geometry_msgs/Pose.h>
+#include <geometry_msgs/PoseArray.h>
+#include <image_transport/image_transport.h>
+#include <cv_bridge/cv_bridge.h>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/opencv.hpp>  
+#include <vector>
 #include <iostream>
-#include <opencv2/opencv.hpp>
+#include <sensor_msgs/image_encodings.h>
  
 using namespace std;
 using namespace cv;
