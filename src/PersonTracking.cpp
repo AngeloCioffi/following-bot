@@ -20,13 +20,16 @@
 using namespace std;
 using namespace cv;
 
+#define OPENCV_WINDOW "Test Window"
+#define OUT_WINDOW "Out Window"
+
 class ImageConverter
 {
   ros::NodeHandle nh_;
   image_transport::ImageTransport it_;
   image_transport::Subscriber image_sub_;
   image_transport::Publisher image_pub_;
-  
+  HOGDescriptor hog;  
   
 public:
 	//constructor, creating an ImageConev
@@ -38,12 +41,16 @@ public:
       &ImageConverter::imageCb, this);
     image_pub_ = it_.advertise("/image_converter/output_video", 1);
 
+    hog.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());
+
     cv::namedWindow(OPENCV_WINDOW);
+    cv::namedWindow(OUT_WINDOW);
   }
 
   ~ImageConverter()
   {
     cv::destroyWindow(OPENCV_WINDOW);
+    cv::destroyWindow(OUT_WINDOW);
   }
 
   void imageCb(const sensor_msgs::ImageConstPtr& msg)
@@ -63,13 +70,9 @@ public:
     cv::Mat Img;
 	Img = cv_ptr->image.clone(); 
 
-    HOGDescriptor hog;
-    hog.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());
  
-    namedWindow("video capture", CV_WINDOW_AUTOSIZE);
- 
-        vector<Rect> found, found_filtered;
-        hog.detectMultiScale(img, found, 0, Size(8,8), Size(32,32), 1.05, 2);
+         vector<Rect> found, found_filtered;
+        hog.detectMultiScale(Img, found, 0, Size(8,8), Size(32,32), 1.05, 2);
  
         size_t i, j;
         for (i=0; i<found.size(); i++)
@@ -89,27 +92,32 @@ public:
 	    r.width = cvRound(r.width*0.8);
 	    r.y += cvRound(r.height*0.06);
 	    r.height = cvRound(r.height*0.9);
-	    rectangle(img, r.tl(), r.br(), cv::Scalar(0,255,0), 2);
+	    rectangle(Img, r.tl(), r.br(), cv::Scalar(0,255,0), 2);
 	}
-	
+
 	//person location/movement code
 	double rectangleCenter;
+
+	if (!found_filtered.empty())
+	{	
+        	rectangleCenter = (found_filtered[0].x + found_filtered[0].width/2) + (found_filtered[found_filtered.size()].y + found_filtered[0].height/2);
+		double rectangleArea; //used to determine how far the person is from the robot
+		rectangleArea = found_filtered[0].width * found_filtered[0].height;
+	}
+
+	found.clear();
+	found_filtered.clear();
 	
-	rectangleCenter = (found_filtered[0].x + found_filtered[0].width/2) + (found_filtered[found_filtered.size()].y + found_filtered[0].height/2);
-	double rectangleArea; //used to determine how far the person is from the robot
-	rectangleArea = found_filtered[0].width * found_filtered.height;
-	
-	
-        cv::imshow(OUT_WINDOW, img);
+        cv::imshow(OUT_WINDOW, Img);
         if (waitKey(20) >= 0)
-            break;
+            return;
         
         image_pub_.publish(cv_ptr->toImageMsg());
-
-}
+    }
+};
 
  
-int main (int argc, const char * argv[])
+int main (int argc, char * argv[])
 {
     ros::init(argc, argv, "PersonTracking");
     ImageConverter ic;	

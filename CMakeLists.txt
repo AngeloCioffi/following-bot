@@ -177,6 +177,10 @@ include_directories(
 #   PATTERN ".svn" EXCLUDE
 # )
 
+add_executable(person_detector src/PersonTracking.cpp)
+add_dependencies(person_detector ${${PROJECT_NAME}_EXPORTED_TARGETS}} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(person_detector ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 # install(FILES
 #   # myfile1
