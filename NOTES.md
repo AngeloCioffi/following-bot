@@ -19,3 +19,6 @@ no rect -- don't move
 
 Here's code for a PCL color histogram posted on a forum:
 http://www.pcl-users.org/Kinect-Color-Histogram-td4037263.html
+
+PCL tutorial on histograms, seems more based on geometric features though. Might be helpful:
+http://pointclouds.org/documentation/tutorials/pfh_estimation.php#pfh-estimation
