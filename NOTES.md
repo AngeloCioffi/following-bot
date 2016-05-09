@@ -22,3 +22,9 @@ http://www.pcl-users.org/Kinect-Color-Histogram-td4037263.html
 
 PCL tutorial on histograms, seems more based on geometric features though. Might be helpful:
 http://pointclouds.org/documentation/tutorials/pfh_estimation.php#pfh-estimation
+
+OpenCV histogram detection (since we are already using OpenCV, might as well use its histogram calculation):
+http://docs.opencv.org/2.4/doc/tutorials/imgproc/histograms/histogram_calculation/histogram_calculation.html
+
+Converting the full matrix of an image to a matrix only from a specified rectangle:
+http://docs.opencv.org/2.4/doc/tutorials/core/mat_the_basic_image_container/mat_the_basic_image_container.html
