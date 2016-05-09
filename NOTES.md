@@ -28,3 +28,8 @@ http://docs.opencv.org/2.4/doc/tutorials/imgproc/histograms/histogram_calculatio
 
 Converting the full matrix of an image to a matrix only from a specified rectangle:
 http://docs.opencv.org/2.4/doc/tutorials/core/mat_the_basic_image_container/mat_the_basic_image_container.html
+
+
+BWI file that shows how to move the robot and get its current location
+https://github.com/utexas-bwi/segbot/blob/master/segbot_navigation/src/move_base_interruptable_server.cpp
+
