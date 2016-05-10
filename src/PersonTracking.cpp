@@ -89,8 +89,9 @@ class ImageConverter
 		else
 		{
 			MatND result;
+			Mat currentSubImage(img, foundRects[0]);
 			
-			calcHist(&foundRects[0], 1, channels, Mat(), result, 3, histSize, histRange, true, false);
+			calcHist(&currentSubImage, 1, channels, Mat(), result, 3, histSize, histRange, true, false);
 			
 			normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat());
 			
