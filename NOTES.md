@@ -26,6 +26,9 @@ http://pointclouds.org/documentation/tutorials/pfh_estimation.php#pfh-estimation
 OpenCV histogram detection (since we are already using OpenCV, might as well use its histogram calculation):
 http://docs.opencv.org/2.4/doc/tutorials/imgproc/histograms/histogram_calculation/histogram_calculation.html
 
+OpenCV histogram comparison tutorial:
+http://docs.opencv.org/2.4/doc/tutorials/imgproc/histograms/histogram_comparison/histogram_comparison.html
+
 Converting the full matrix of an image to a matrix only from a specified rectangle:
 http://docs.opencv.org/2.4/doc/tutorials/core/mat_the_basic_image_container/mat_the_basic_image_container.html
 
