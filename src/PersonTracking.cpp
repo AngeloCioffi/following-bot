@@ -115,8 +115,6 @@ public:
 
 		prevArea = -1.0;
 		
-		previousMatch.dims = 0;
-
 		previousCountdown = FRAMES_TO_FORGET;
 
 		matrixValid = false;
