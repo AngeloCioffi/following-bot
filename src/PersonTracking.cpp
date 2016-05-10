@@ -29,6 +29,12 @@ using namespace cv;
 #define MIN_AREA_DIFF 50
 #define MAX_LINEAR_VELOCITY .75
 
+#define HISTOGRAM_NUM_BINS 64
+#define HISTOGRAM_MIN_VALUE 0
+#define HISTOGRAM_MAX_VALUE 256
+
+#define FRAMES_TO_FORGET 5
+
 class ImageConverter
 {
 	ros::NodeHandle nh_;
@@ -39,10 +45,59 @@ class ImageConverter
 	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> ac("move_base", true); // <---- might cause a compile error
 
 	double prevArea;
+	MatND previousMatch;
+	int previousCountdown;
+	bool matrixValid;
 	
 	Rect findBestMatchForPreviousHistogram(cv::Mat img, vector<Rect> foundRects)
 	{
-		return foundRects[0];
+		int channels[] = {0, 1, 2};
+		
+		int bins = HISTOGRAM_NUM_BINS;
+		int histSize[] = {bins, bins, bins};
+		
+		float range[] = {HISTOGRAM_MIN_VALUE, HISTOGRAM_MAX_VALUE};
+		const float* histRange[] = {range, range, range};
+		
+		int position = 0;
+		double previousBest = 0.0;
+		
+		
+		
+		if (matrixValid)
+		{
+			for (int i = 0; i < foundRects.size(); i++)
+			{
+				Mat currentSubImage(img, foundRects[i]);
+				
+				MatND result;
+				
+				calcHist(&currentSubImage, 1, channels, Mat(), result, 3, histSize, histRange, true, false);
+				
+				normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat());
+				
+				double comparedResult = compareHist(previousMatch, result, CV_COMP_INTERSECT);
+				
+				if (comparedResult > previousBest)
+				{
+					previousBest = comparedResult;
+					
+					position = i;
+				}
+			}
+		}
+		else
+		{
+			MatND result;
+			
+			calcHist(&foundRects[0], 1, channels, Mat(), result, 3, histSize, histRange, true, false);
+			
+			normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat());
+			
+			result.copyTo(previousMatch);
+		}
+		
+		return foundRects[position];
 	}
 
 public:
@@ -59,6 +114,12 @@ public:
 		hog.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());
 
 		prevArea = -1.0;
+		
+		previousMatch.dims = 0;
+
+		previousCountdown = FRAMES_TO_FORGET;
+
+		matrixValid = false;
 
 		cv::namedWindow(OPENCV_WINDOW);
 		cv::namedWindow(OUT_WINDOW);
@@ -156,6 +217,19 @@ public:
 			goal.target_pose.pose.orientation = tf::createQuaternionMsgFromYaw(yaw);
 
 			prevArea = rectangleArea;
+			
+			previousCounter = 0;
+
+			matrixValid = true;
+		}
+		else
+		{
+			previousCounter++;
+			
+			if (previousCounter >= FRAMES_TO_FORGET)
+			{
+				matrixValid = false;
+			}
 		}
 
 		found.clear();
