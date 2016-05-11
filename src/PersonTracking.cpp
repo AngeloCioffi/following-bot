@@ -4,6 +4,7 @@
 #include <tf/tf.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
+#include <actionlib/client/simple_client_goal_state.h>
 #include <tf/transform_listener.h>
 #include <actionlib/server/simple_action_server.h>
 #include <geometry_msgs/Pose.h>
@@ -261,12 +262,11 @@ public:
 			goal.target_pose.pose.position.z = 0.0;
 			goal.target_pose.pose.orientation = tf::createQuaternionMsgFromYaw(-yaw);
 
-			countdown++;
-
-			if (countdown >= 1)
+			actionlib::SimpleClientGoalState currentState = ac->getState();
+			
+			if (currentState.isDone())
 			{
 				ac->sendGoal(goal);
-				countdown = 0;
 			}
 			
 			for (i=0; i<found_filtered.size(); i++)
