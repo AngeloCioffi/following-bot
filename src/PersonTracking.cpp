@@ -23,11 +23,11 @@ using namespace cv;
 #define OPENCV_WINDOW "Test Window"
 #define OUT_WINDOW "Out Window"
 
-#define MIN_DIFF_FOR_MOVE 25
-#define MAX_YAW_VELOCITY .5
+#define MIN_DIFF_FOR_MOVE 10
+#define MAX_YAW_VELOCITY .05
 
-#define MIN_AREA_DIFF 50
-#define MAX_LINEAR_VELOCITY .75
+#define MIN_AREA_DIFF 10
+#define MAX_LINEAR_VELOCITY 1.5
 
 #define HISTOGRAM_NUM_BINS 64
 #define HISTOGRAM_MIN_VALUE 0
@@ -42,12 +42,14 @@ class ImageConverter
 	image_transport::Subscriber image_sub_;
 	image_transport::Publisher image_pub_;
 	HOGDescriptor hog;  
-	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> ac("move_base", true); // <---- might cause a compile error
+	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>* ac; // <---- might cause a compile error
 
 	double prevArea;
 	MatND previousMatch;
 	int previousCountdown;
 	bool matrixValid;
+
+	int countdown;
 	
 	Rect findBestMatchForPreviousHistogram(cv::Mat img, vector<Rect> foundRects)
 	{
@@ -64,10 +66,11 @@ class ImageConverter
 		
 		
 		
-		if (matrixValid)
+		if (/*matrixValid*/false)
 		{
 			for (int i = 0; i < foundRects.size(); i++)
 			{
+				ROS_INFO("Just before Mat currentSubImage constructor.");
 				Mat currentSubImage(img, foundRects[i]);
 				
 				MatND result;
@@ -76,7 +79,7 @@ class ImageConverter
 				
 				normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat());
 				
-				double comparedResult = compareHist(previousMatch, result, CV_COMP_INTERSECT);
+				double comparedResult = compareHist(previousMatch, result, CV_COMP_CORREL);
 				
 				if (comparedResult > previousBest)
 				{
@@ -89,12 +92,24 @@ class ImageConverter
 		else
 		{
 			MatND result;
-			Mat currentSubImage(img, foundRects[0]);
+
+			Rect r = foundRects[0];
+/*
+			if (r.x < 0)
+				r.x = 0;
+			if (r.y < 0)
+				r.y = 0;
+			if (r.x + r.width >= img.cols)
+				r.width = img.cols - 1 - r.x;
+			if (r.y + r.height >= img.rows)
+				r.height = img.rows - 1 - r.y;
+*/
+			Mat currentSubImage(img, r);
 			
 			calcHist(&currentSubImage, 1, channels, Mat(), result, 3, histSize, histRange, true, false);
-			
+			/*
 			normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat());
-			
+			*/
 			result.copyTo(previousMatch);
 		}
 		
@@ -114,9 +129,12 @@ public:
 
 		hog.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());
 
+		countdown = 0;
 		prevArea = -1.0;
 		
 		previousCountdown = FRAMES_TO_FORGET;
+
+		ac = new actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>("move_base", true);
 
 		matrixValid = false;
 
@@ -169,6 +187,15 @@ public:
 			r.width = cvRound(r.width*0.8);
 			r.y += cvRound(r.height*0.06);
 			r.height = cvRound(r.height*0.9);
+			if (r.x < 0)
+				r.x = 0;
+			if (r.y < 0)
+				r.y = 0;
+			if (r.x + r.width >= Img.cols)
+				r.width = Img.cols - 1 - r.x;
+			if (r.y + r.height >= Img.rows)
+				r.height = Img.rows - 1 - r.y;
+			found_filtered[i] = r;
 			rectangle(Img, r.tl(), r.br(), cv::Scalar(0,255,0), 2);
 		}
 
@@ -189,7 +216,7 @@ public:
 
 			double middleX = ((double)Img.cols)/2;
 	
-			double difference = rectangleCenter - middleX
+			double difference = rectangleCenter - middleX;
 
 			double yaw = 0.0;
 
@@ -198,7 +225,7 @@ public:
 				yaw = MAX_YAW_VELOCITY * difference / middleX;
 			}
 
-			double nextX = 0.0
+			double nextX = 0.0;
 
 			if (prevArea > 0)
 			{
@@ -209,25 +236,36 @@ public:
 					nextX = MAX_LINEAR_VELOCITY * areaDifference / prevArea;
 				}
 			}
+			else
+			{
+				prevArea = rectangleArea;
+			}
 
-			goal.target_pose.pose.position.x = nextX;
+			goal.target_pose.pose.position.x = -nextX;
 			goal.target_pose.pose.position.y = 0.0;
 			goal.target_pose.pose.position.z = 0.0;
-			goal.target_pose.pose.orientation = tf::createQuaternionMsgFromYaw(yaw);
+			goal.target_pose.pose.orientation = tf::createQuaternionMsgFromYaw(-yaw);
 
-			prevArea = rectangleArea;
+			countdown++;
+
+			if (countdown >= 1)
+			{
+				ac->sendGoal(goal);
+				countdown = 0;
+			}
 			
-			previousCounter = 0;
+			previousCountdown = 0;
 
 			matrixValid = true;
 		}
 		else
 		{
-			previousCounter++;
+			previousCountdown++;
 			
-			if (previousCounter >= FRAMES_TO_FORGET)
+			if (previousCountdown >= FRAMES_TO_FORGET)
 			{
 				matrixValid = false;
+				prevArea = -1.0;
 			}
 		}
 
