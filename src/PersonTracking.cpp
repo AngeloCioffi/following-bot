@@ -77,9 +77,9 @@ class ImageConverter
 				
 				MatND resultRed, resultGreen, resultBlue;
 				
-				calcHist(&bgrPlanes[2], 1, 0, Mat(), resultRed, 3, histSize, histRange, true, false);
-				calcHist(&bgrPlanes[1], 1, 0, Mat(), resultGreen, 3, histSize, histRange, true, false);
-				calcHist(&bgrPlanes[0], 1, 0, Mat(), resultBlue, 3, histSize, histRange, true, false);
+				calcHist(&bgrPlanes[2], 1, 0, Mat(), resultRed, 1, histSize, histRange, true, false);
+				calcHist(&bgrPlanes[1], 1, 0, Mat(), resultGreen, 1, histSize, histRange, true, false);
+				calcHist(&bgrPlanes[0], 1, 0, Mat(), resultBlue, 1, histSize, histRange, true, false);
 				
 				normalize(resultRed, resultRed, 0, 1, NORM_MINMAX, -1, Mat());
 				normalize(resultGreen, resultGreen, 0, 1, NORM_MINMAX, -1, Mat());
@@ -114,9 +114,9 @@ class ImageConverter
 			
 			MatND resultRed, resultGreen, resultBlue;
 			
-			calcHist(&bgrPlanes[2], 1, 0, Mat(), resultRed, 3, histSize, histRange, true, false);
-			calcHist(&bgrPlanes[1], 1, 0, Mat(), resultGreen, 3, histSize, histRange, true, false);
-			calcHist(&bgrPlanes[0], 1, 0, Mat(), resultBlue, 3, histSize, histRange, true, false);
+			calcHist(&bgrPlanes[2], 1, 0, Mat(), resultRed, 1, histSize, histRange, true, false);
+			calcHist(&bgrPlanes[1], 1, 0, Mat(), resultGreen, 1, histSize, histRange, true, false);
+			calcHist(&bgrPlanes[0], 1, 0, Mat(), resultBlue, 1, histSize, histRange, true, false);
 			
 			normalize(resultRed, resultRed, 0, 1, NORM_MINMAX, -1, Mat());
 			normalize(resultGreen, resultGreen, 0, 1, NORM_MINMAX, -1, Mat());
