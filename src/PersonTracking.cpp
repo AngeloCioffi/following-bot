@@ -45,41 +45,53 @@ class ImageConverter
 	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>* ac; // <---- might cause a compile error
 
 	double prevArea;
-	MatND previousMatch;
+	MatND previousMatchRed;
+	MatND previousMatchGreen;
+	MatND previousMatchBlue;
 	int previousCountdown;
 	bool matrixValid;
 
 	int countdown;
 	
-	Rect findBestMatchForPreviousHistogram(cv::Mat img, vector<Rect> foundRects)
+	int findBestMatchForPreviousHistogram(cv::Mat img, vector<Rect> foundRects)
 	{
-		int channels[] = {0, 1, 2};
-		
 		int bins = HISTOGRAM_NUM_BINS;
-		int histSize[] = {bins, bins, bins};
+		int histSize[] = {bins};
 		
 		float range[] = {HISTOGRAM_MIN_VALUE, HISTOGRAM_MAX_VALUE};
-		const float* histRange[] = {range, range, range};
+		const float* histRange[] = {range};
 		
 		int position = 0;
 		double previousBest = 0.0;
 		
-		
-		
-		if (/*matrixValid*/false)
+		if (matrixValid)
 		{
 			for (int i = 0; i < foundRects.size(); i++)
 			{
 				ROS_INFO("Just before Mat currentSubImage constructor.");
 				Mat currentSubImage(img, foundRects[i]);
 				
-				MatND result;
+				vector<MatND> bgrPlanes;
 				
-				calcHist(&currentSubImage, 1, channels, Mat(), result, 3, histSize, histRange, true, false);
+				split(currentSubImage, bgrPlanes);
 				
-				normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat());
+				MatND resultRed, resultGreen, resultBlue;
 				
-				double comparedResult = compareHist(previousMatch, result, CV_COMP_CORREL);
+				calcHist(&bgrPlanes[2], 1, 0, Mat(), resultRed, 3, histSize, histRange, true, false);
+				calcHist(&bgrPlanes[1], 1, 0, Mat(), resultGreen, 3, histSize, histRange, true, false);
+				calcHist(&bgrPlanes[0], 1, 0, Mat(), resultBlue, 3, histSize, histRange, true, false);
+				
+				normalize(resultRed, resultRed, 0, 1, NORM_MINMAX, -1, Mat());
+				normalize(resultGreen, resultGreen, 0, 1, NORM_MINMAX, -1, Mat());
+				normalize(resultBlue, resultBlue, 0, 1, NORM_MINMAX, -1, Mat());
+				
+				int comparisonType = CV_COMP_CORREL;
+				
+				double comparedResult = compareHist(previousMatchRed, resultRed, comparisonType);
+				comparedResult += compareHist(previousMatchGreen, resultGreen, comparisonType);
+				comparedResult += compareHist(previousMatchBlue, resultBlue, comparisonType);
+				
+				comparedResult = comparedResult / 3.0;
 				
 				if (comparedResult > previousBest)
 				{
@@ -94,26 +106,28 @@ class ImageConverter
 			MatND result;
 
 			Rect r = foundRects[0];
-/*
-			if (r.x < 0)
-				r.x = 0;
-			if (r.y < 0)
-				r.y = 0;
-			if (r.x + r.width >= img.cols)
-				r.width = img.cols - 1 - r.x;
-			if (r.y + r.height >= img.rows)
-				r.height = img.rows - 1 - r.y;
-*/
 			Mat currentSubImage(img, r);
 			
-			calcHist(&currentSubImage, 1, channels, Mat(), result, 3, histSize, histRange, true, false);
-			/*
-			normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat());
-			*/
-			result.copyTo(previousMatch);
+			vector<MatND> bgrPlanes;
+			
+			split(currentSubImage, bgrPlanes);
+			
+			MatND resultRed, resultGreen, resultBlue;
+			
+			calcHist(&bgrPlanes[2], 1, 0, Mat(), resultRed, 3, histSize, histRange, true, false);
+			calcHist(&bgrPlanes[1], 1, 0, Mat(), resultGreen, 3, histSize, histRange, true, false);
+			calcHist(&bgrPlanes[0], 1, 0, Mat(), resultBlue, 3, histSize, histRange, true, false);
+			
+			normalize(resultRed, resultRed, 0, 1, NORM_MINMAX, -1, Mat());
+			normalize(resultGreen, resultGreen, 0, 1, NORM_MINMAX, -1, Mat());
+			normalize(resultBlue, resultBlue, 0, 1, NORM_MINMAX, -1, Mat());
+
+			resultRed.copyTo(previousMatchRed);
+			resultGreen.copyTo(previousMatchGreen);
+			resultBlue.copyTo(previousMatchBlue);
 		}
 		
-		return foundRects[position];
+		return position;
 	}
 
 public:
@@ -196,7 +210,6 @@ public:
 			if (r.y + r.height >= Img.rows)
 				r.height = Img.rows - 1 - r.y;
 			found_filtered[i] = r;
-			rectangle(Img, r.tl(), r.br(), cv::Scalar(0,255,0), 2);
 		}
 
 		//person location/movement code
@@ -204,7 +217,9 @@ public:
 
 		if (!found_filtered.empty())
 		{
-			Rect bestFit = findBestMatchForPreviousHistogram(Img, found_filtered);
+			int bestFitPosition = findBestMatchForPreviousHistogram(Img, found_filtered);
+
+			Rect bestFit = found_filter[bestFitPosition];
 
 			rectangleCenter = (bestFit.x + bestFit.width/2);
 			double rectangleArea; //used to determine how far the person is from the robot
@@ -252,6 +267,19 @@ public:
 			{
 				ac->sendGoal(goal);
 				countdown = 0;
+			}
+			
+			for (i=0; i<found_filtered.size(); i++)
+			{
+				Rect r = found_filtered[i];
+				if (i == bestFitPosition)
+				{
+					rectangle(Img, r.tl(), r.br(), cv::Scalar(0,0,255), 2);
+				}
+				else
+				{
+					rectangle(Img, r.tl(), r.br(), cv::Scalar(0,255,0), 2);
+				}
 			}
 			
 			previousCountdown = 0;
