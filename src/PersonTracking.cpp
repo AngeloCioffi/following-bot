@@ -25,10 +25,10 @@ using namespace cv;
 #define OUT_WINDOW "Out Window"
 
 #define MIN_DIFF_FOR_MOVE 10
-#define MAX_YAW_VELOCITY .05
+#define MAX_YAW_VELOCITY .15
 
 #define MIN_AREA_DIFF 10
-#define MAX_LINEAR_VELOCITY 1.5
+#define MAX_LINEAR_VELOCITY 0.5
 
 #define HISTOGRAM_NUM_BINS 64
 #define HISTOGRAM_MIN_VALUE 0
