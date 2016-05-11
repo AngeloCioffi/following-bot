@@ -219,7 +219,7 @@ public:
 		{
 			int bestFitPosition = findBestMatchForPreviousHistogram(Img, found_filtered);
 
-			Rect bestFit = found_filter[bestFitPosition];
+			Rect bestFit = found_filtered[bestFitPosition];
 
 			rectangleCenter = (bestFit.x + bestFit.width/2);
 			double rectangleArea; //used to determine how far the person is from the robot
