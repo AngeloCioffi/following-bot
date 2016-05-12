@@ -36,3 +36,6 @@ http://docs.opencv.org/2.4/doc/tutorials/core/mat_the_basic_image_container/mat_
 BWI file that shows how to move the robot and get its current location
 https://github.com/utexas-bwi/segbot/blob/master/segbot_navigation/src/move_base_interruptable_server.cpp
 
+HOG Person Descriptor Paper:
+http://lear.inrialpes.fr/people/triggs/pubs/Dalal-cvpr05.pdf
+
