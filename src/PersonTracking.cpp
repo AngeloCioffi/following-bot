@@ -25,7 +25,7 @@ using namespace cv;
 #define OUT_WINDOW "Out Window"
 
 #define MIN_DIFF_FOR_MOVE 10
-#define MAX_YAW_VELOCITY .15
+#define MAX_YAW_VELOCITY .35
 
 #define MIN_AREA_DIFF 10
 #define MAX_LINEAR_VELOCITY 0.5
